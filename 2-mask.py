@@ -15,7 +15,6 @@ path = r'datasets'  # 这里是指.json文件所在文件夹的路径
 # 此路径为，json文件所在路径
 # def extract_png():  第二次转换用到
 path_before = os.path.join(path, "before")
-path_json_data = os.path.join(path, "json_data")  # json文件夹所在位置
 path_save_png = os.path.join(path, "json_png")  # 将标签图从json文件中批量取出后指定保存的文件目录
 path_save_png_binary = os.path.join(path, "json_png_binary")  # 二至图像最终保存的路径
 
@@ -28,10 +27,6 @@ def pre_treatment():
     json_png_binary 用于存储最终转换后的8位的单通道黑白图像
     :return:
     '''
-    if os.path.isdir(os.path.join(path, "json_data")) is False:
-        os.mkdir(os.path.join(path, "json_data"))
-    else:
-        print('文件已存在')
     if os.path.isdir(os.path.join(path, "json_png")) is False:
         os.mkdir(os.path.join(path, "json_png"))
     else:
@@ -48,7 +43,7 @@ def json_png():
     并存储至当前文件夹下的json_date文件夹中
     :return: 无
     '''
-    json_file = glob.glob(os.path.join(path_before, "*.json"))
+    json_file = glob.glob(os.path.join(path_before, "*.json"))  # 找出before目录所有带.json的文件
     os.system("activate labelme")  # 激活labelme环境（根据自己设置的修改）
     for file in json_file:
         os.system("labelme_json_to_dataset.exe %s" % (file))  # 调用进行批量转换
@@ -83,8 +78,8 @@ def png_to_binary():
 
 
 def process():
-    #pre_treatment()  # 预处理，创建存储所需的相应文件夹
-    #json_png()  # 调用labelme的json转换png程序
+    pre_treatment()  # 预处理，创建存储所需的相应文件夹
+    json_png()  # 调用labelme的json转换png程序
     extract_png()  # 从转换的数据中提取png图像
     png_to_binary()  # 将png转换为8位的单通道黑白图像，用于分割训练
 
