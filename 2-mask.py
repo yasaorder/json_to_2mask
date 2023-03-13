@@ -8,6 +8,10 @@ import shutil
 import glob
 import re
 import xlwt
+from skimage.morphology import thin, skeletonize
+from skimage import io
+import matplotlib.pyplot as plt
+
 
 # def json_png():  第一次转换用到
 path = r'datasets'  # 这里是指.json文件所在文件夹的路径
@@ -17,6 +21,9 @@ path = r'datasets'  # 这里是指.json文件所在文件夹的路径
 path_before = os.path.join(path, "before")
 path_save_png = os.path.join(path, "json_png")  # 将标签图从json文件中批量取出后指定保存的文件目录
 path_save_png_binary = os.path.join(path, "json_png_binary")  # 二至图像最终保存的路径
+path_save_png_01binary = os.path.join(path, "json_png_01binary")
+path_save_png_thin = os.path.join(path, "json_png_thin")
+path_save_png_skel = os.path.join(path, "json_png_skel")
 
 
 def pre_treatment():
@@ -31,8 +38,24 @@ def pre_treatment():
         os.mkdir(os.path.join(path, "json_png"))
     else:
         print('文件已存在')
+
     if os.path.isdir(os.path.join(path, "json_png_binary")) is False:
         os.mkdir(os.path.join(path, "json_png_binary"))
+    else:
+        print('文件已存在')
+
+    if os.path.isdir(os.path.join(path, "json_png_01binary")) is False:
+        os.mkdir(os.path.join(path, "json_png_01binary"))
+    else:
+        print('文件已存在')
+
+    if os.path.isdir(os.path.join(path, "json_png_thin")) is False:
+        os.mkdir(os.path.join(path, "json_png_thin"))
+    else:
+        print('文件已存在')
+
+    if os.path.isdir(os.path.join(path, "json_png_skel")) is False:
+        os.mkdir(os.path.join(path, "json_png_skel"))
     else:
         print('文件已存在')
 
@@ -67,21 +90,53 @@ def extract_png():
 
 def png_to_binary():
     '''
-    由于数据集是做二分类分割，所以，需要将ground_truth转换为8位的单通道黑白图像，才能作为训练时的label使用。
-    将提取出来的png转换为8位的单通道黑白图像
+    由于数据集是做二分类分割，所以，需要将ground_truth转换为8位的单通道黑白图像和1位的单通道黑白图像，才能作为训练时的label使用。
+    将提取出来的png转换为8位的单通道黑白图像和1位的单通道黑白图像
     '''
     for im in os.listdir(path_save_png):
         img = cv2.imread(os.path.join(path_save_png, im))
         b, g, r = cv2.split(img)
         r[np.where(r != 0)] = 255
         cv2.imwrite(os.path.join(path_save_png_binary, im), r)
+        cv2.destroyAllWindows()
+        r[np.where(r != 0)] = 1
+        cv2.imwrite(os.path.join(path_save_png_01binary, '01' + im), r)
+        cv2.destroyAllWindows()
+
+
+
+def png_refine():
+    '''
+    采用skimage 模块的 skeletonize和 thin 方法对二值图像做细化处理
+    :return:
+    '''
+    path_save_subplot = os.path.join(path, "subplot")
+    for im in os.listdir(path_save_png_01binary):
+        img = cv2.imread(os.path.join(path_save_png_01binary, im),0)
+        thinned = thin(img)
+        skel = skeletonize(img)
+        io.imsave(os.path.join(path_save_png_thin, 'thin' + im), thinned)
+        io.imsave(os.path.join(path_save_png_skel, 'skel' + im), skel)
+        f, ax = plt.subplots(2, 2)
+        ax[0, 0].imshow(img)
+        ax[0, 0].set_title('original')
+        ax[0, 0].get_xaxis().set_visible(False)
+        ax[0, 1].axis('off')
+        ax[1, 0].imshow(thinned)
+        ax[1, 0].set_title('thin')
+        ax[1, 1].imshow(skel)
+        ax[1, 1].set_title('skeletonize')
+        plt.savefig(os.path.join(path_save_subplot, im))
+        plt.close()
 
 
 def process():
-    pre_treatment()  # 预处理，创建存储所需的相应文件夹
-    json_png()  # 调用labelme的json转换png程序
-    extract_png()  # 从转换的数据中提取png图像
+    #pre_treatment()  # 预处理，创建存储所需的相应文件夹
+    #json_png()  # 调用labelme的json转换png程序
+    #extract_png()  # 从转换的数据中提取png图像
     png_to_binary()  # 将png转换为8位的单通道黑白图像，用于分割训练
+    png_refine()
+
 
 
 if __name__ == "__main__":
