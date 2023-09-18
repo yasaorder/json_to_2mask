@@ -1,6 +1,6 @@
-'''
-将label中标注的json文件，转化为可用于分割训练的标签二值化黑白png图片
-'''
+# --------------------------------------------------------------------------
+# 将label中标注的json文件，转化为可用于分割训练的标签二值化黑白png图片
+# -------------------------------------------------------------------------
 import os
 import cv2
 import numpy as np
@@ -96,13 +96,17 @@ def png_to_binary():
     for im in os.listdir(path_save_png):
         img = cv2.imread(os.path.join(path_save_png, im))
         b, g, r = cv2.split(img)
-        r[np.where(r != 0)] = 255
-        cv2.imwrite(os.path.join(path_save_png_binary, im), r)
+        r[np.where(r != 0)] = 255 # 转为黑白二值图，如果不是做二分类需要修改下面的代码
+        cv2.imwrite(os.path.join(path_save_png_binary, im), r) # 保存为单通道二值图
         cv2.destroyAllWindows()
         r[np.where(r != 0)] = 1
         cv2.imwrite(os.path.join(path_save_png_01binary, '01' + im), r)
         cv2.destroyAllWindows()
 
+        # 多分类的代码，没有验证过，不一定对
+        # img = cv2.imread(os.path.join(path_save_png, im))
+        # cv2.imwrite(os.path.join(path_save_png_binary, im)) # 保存为单通道二值图
+        # cv2.destroyAllWindows()
 
 
 def png_refine():
