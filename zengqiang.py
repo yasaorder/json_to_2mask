@@ -6,7 +6,7 @@ import json
 import base64
 import math
 
-# 数据集路径
+# 用labelme标注的数据集路径，包括jpg和json文件
 path = "datasets/zengqiang/yangben/"
 # 生成数据的保存路径
 save_path = "datasets/zengqiang/yangben/"
